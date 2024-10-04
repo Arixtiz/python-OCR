@@ -1,170 +1,109 @@
-# OCR Processor for Invoices
 
-This project uses Tesseract OCR to extract text from images of invoices and organizes the data in a JSON format. The script processes multiple invoice images and outputs structured data that includes client information, product details, and totals.
+# Proyecto OCR en Python
 
-## Requirements
+Este proyecto utiliza Tesseract para realizar el reconocimiento óptico de caracteres (OCR) en imágenes de facturas. A continuación se detallan las instrucciones para instalar y ejecutar el proyecto en diferentes sistemas operativos.
 
-- macOS (or any Unix-based system)
+## Prerequisitos
+
+Asegúrate de tener instalados los siguientes programas:
+
 - Python 3.x
-- Homebrew (for installing Tesseract)
-- Python libraries: `pytesseract`, `Pillow`
+- Pip (incluido en Python 3.x)
+- Tesseract OCR
 
-## Installation Guide
+## Instalación
 
-### Step 1: Install Homebrew (if not installed)
+### 1. Clonar el repositorio
 
-Homebrew is a package manager for macOS. To install it, open the Terminal and run the following command:
+Primero, clona el repositorio a tu máquina local:
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+git clone https://github.com/Arixtiz/python-OCR.git
+cd python-OCR
 ```
 
-Follow the instructions on the screen to complete the installation.
+### 2. Instalar Tesseract
 
-### Step 2: Install Tesseract
+#### Para macOS
 
-Once Homebrew is installed, you can install Tesseract by running the following command in your Terminal:
+Puedes instalar Tesseract usando Homebrew. Si no tienes Homebrew, puedes instalarlo desde [aquí](https://brew.sh/).
 
 ```bash
 brew install tesseract
 ```
 
-To verify the installation, you can run:
+#### Para Ubuntu
+
+Ejecuta el siguiente comando en la terminal:
 
 ```bash
-tesseract --version
+sudo apt-get install tesseract-ocr
 ```
 
-### Step 3: Install Language Data (Optional)
+#### Para Windows
 
-By default, Tesseract supports multiple languages. If you're working with Spanish invoices, you can install the Spanish language model with the following command:
+1. Descarga el instalador de Tesseract desde [aquí](https://github.com/UB-Mannheim/tesseract/wiki).
+2. Sigue las instrucciones del instalador y asegúrate de añadir la ruta de instalación de Tesseract a las variables de entorno del sistema.
+
+### 3. Crear un entorno virtual
+
+Es una buena práctica crear un entorno virtual para gestionar las dependencias de tu proyecto. Sigue estos pasos:
 
 ```bash
-brew install tesseract-lang/spa.traineddata
+# Entra en la carpeta del proyecto
+cd python-OCR
+
+# Crear un entorno virtual (puedes cambiar 'venv' por el nombre que prefieras)
+python -m venv venv
+
+# Activar el entorno virtual
+# En macOS y Linux
+source venv/bin/activate
+
+# En Windows
+venv\Scripts\activate
 ```
 
-### Step 4: Install Python Libraries
+### 4. Instalar dependencias
 
-In your Python environment, install the required libraries:
+Con el entorno virtual activado, instala las dependencias del proyecto:
 
 ```bash
-pip install pytesseract Pillow
+pip install -r requirements.txt
 ```
 
-These libraries allow us to interact with Tesseract and manipulate images in Python.
+## Uso
 
-## Usage
-
-### Python OCR Script
-
-The provided Python script extracts information from invoice images and converts it to structured JSON format. Here’s how the script works:
-
-1. **Tesseract OCR** is used to extract text from images .
-2. **Regular expressions (regex)** are used to identify and extract specific data fields such as client name, ID, city, product details, and totals.
-3. The processed data from multiple invoices is saved in a JSON file.
-
-### Running the Script
-
-1. Place your invoice images in a folder.
-2. Modify the list of images in the script to include the path to your images.
-3. Run the script with:
+Una vez que hayas configurado el entorno y las dependencias, puedes ejecutar el script:
 
 ```bash
-python ocr_invoice_processor.py
+python script.py
 ```
 
-### Example Code
+Asegúrate de tener las imágenes de las facturas en las carpetas correspondientes dentro de la carpeta `images`.
 
-Here’s a simplified version of the script:
+## Estructura de Carpetas
 
-```python
-import pytesseract
-from PIL import Image
-import json
-import re
+Asegúrate de que tu estructura de carpetas sea similar a la siguiente:
 
-# Function to process an invoice image and extract data
-def procesar_factura(imagen_path):
-    imagen = Image.open(imagen_path)
-    texto = pytesseract.image_to_string(imagen, lang='spa')
-
-    datos_factura = {}
-    datos_factura['cliente'] = re.search(r'Cliente: (.+)', texto).group(1)
-    datos_factura['cedula'] = re.search(r'Cédula o Nit: (\d+)', texto).group(1)
-    datos_factura['celular'] = re.search(r'Celular: (\d+)', texto).group(1)
-    datos_factura['ciudad'] = re.search(r'Ciudad: (.+)', texto).group(1)
-    datos_factura['fecha'] = re.search(r'Fecha: (\d{2} de .+ \d{4})', texto).group(1)
-    datos_factura['tipo_cliente'] = re.search(r'Tipo de Cliente: (.+)', texto).group(1)
-
-    productos = re.findall(r'([A-Z]+\d+)\s+(.+?)\s+(\d+)\s+(.+?)\s+([\d,.]+)\s+([\d,.]+)', texto)
-    productos_lista = []
-    for producto in productos:
-        productos_lista.append({
-            'ref': producto[0],
-            'producto': producto[1],
-            'cantidad': int(producto[2]),
-            'especificacion': producto[3],
-            'precio_venta': float(producto[4].replace(',', '.')),
-            'total': float(producto[5].replace(',', '.'))
-        })
-
-    datos_factura['productos'] = productos_lista
-    datos_factura['total'] = float(re.search(r'TOTAL\s+([\d,.]+)', texto).group(1).replace(',', '.'))
-
-    return datos_factura
-
-# Function to process multiple invoices and save them as JSON
-def procesar_varias_facturas(imagenes):
-    todas_facturas = []
-    for imagen in imagenes:
-        datos_factura = procesar_factura(imagen)
-        todas_facturas.append(datos_factura)
-
-    # Save the data to a JSON file
-    with open('facturas.json', 'w') as f:
-        json.dump(todas_facturas, f, ensure_ascii=False, indent=4)
-
-# List of invoice images
-imagenes_facturas = ['invoice1.png', 'invoice2.png']  # Add your image paths here
-
-# Process the invoices
-procesar_varias_facturas(imagenes_facturas)
+```
+/python-OCR
+|-- images
+|   |-- ABRIL
+|   |-- MARZO
+|   |-- MAYO
+|-- venv
+|-- .gitignore
+|-- LICENSE
+|-- README.md
+|-- script.py
 ```
 
-### Output
+## Contribuciones
 
-The script will generate a `facturas.json` file that contains the structured data for each invoice. Example output:
+Si deseas contribuir a este proyecto, por favor abre un *issue* o un *pull request*.
 
-```json
-[
-    {
-        "cliente": "Mariana Vásquez Echavarría",
-        "cedula": "1020488334",
-        "celular": "3005089165",
-        "ciudad": "Bello, Antioquia",
-        "fecha": "22 de Mayo de 2024",
-        "tipo_cliente": "Mayorista",
-        "productos": [
-            {
-                "ref": "A074",
-                "producto": "ANILLO ARIADNA",
-                "cantidad": 1,
-                "especificacion": "",
-                "precio_venta": 9000.0,
-                "total": 9000.0
-            },
-            ...
-        ],
-        "total": 180900.0
-    }
-]
-```
+## Licencia
 
-## Contribution
-
-Feel free to fork this repository and submit pull requests to improve the code or add new features.
-
-## License
-
-This project is licensed under the MIT License.
+Este proyecto está bajo la Licencia MIT - consulta el archivo [LICENSE](LICENSE) para más detalles.
 ```
