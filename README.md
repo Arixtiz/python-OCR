@@ -59,7 +59,7 @@ These libraries allow us to interact with Tesseract and manipulate images in Pyt
 
 The provided Python script extracts information from invoice images and converts it to structured JSON format. Here’s how the script works:
 
-1. **Tesseract OCR** is used to extract text from images.
+1. **Tesseract OCR** is used to extract text from images .
 2. **Regular expressions (regex)** are used to identify and extract specific data fields such as client name, ID, city, product details, and totals.
 3. The processed data from multiple invoices is saved in a JSON file.
 

@@ -54,5 +54,5 @@ def procesar_varias_facturas(carpeta_imagenes):
 # Ruta a la carpeta de imágenes
 carpeta_imagenes = './imagenes_facturas'  
 
-# Procesar todas las facturas en la carpeta
+# Procesar todas las facturas
 procesar_varias_facturas(carpeta_imagenes)
